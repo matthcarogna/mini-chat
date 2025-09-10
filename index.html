@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Mini Chat & Immagini</title>
+  <style>
+    :root{--bg:#f6f7fb;--fg:#111;--muted:#666;--bubble:#fff;--mine:#e8f0fe}
+    body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--fg)}
+    header{position:sticky;top:0;background:#fff;border-bottom:1px solid #eee;padding:12px 16px;font-weight:600}
+    #wrap{max-width:860px;margin:0 auto;padding:12px 16px 96px}
+    .msg{display:flex;gap:12px;margin:10px 0}
+    .msg.mine{justify-content:flex-end}
+    .bubble{max-width:72%;background:var(--bubble);padding:12px 14px;border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.06);white-space:pre-wrap}
+    .msg.mine .bubble{background:var(--mine)}
+    .sys{font-size:12px;color:var(--muted);text-align:center;margin:14px 0}
+    footer{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #eee}
+    #bar{max-width:860px;margin:0 auto;padding:8px 12px;display:flex;gap:8px;align-items:center}
+    textarea{flex:1;min-height:48px;max-height:160px;border:1px solid #ddd;border-radius:12px;padding:10px 12px;resize:vertical}
+    button{border:0;background:#111;color:#fff;padding:10px 14px;border-radius:12px;cursor:pointer}
+    .hint{font-size:12px;color:var(--muted)}
+    .imgthumb{max-width:220px;border-radius:10px;display:block;margin-top:6px}
+    .cmd{color:#9147ff;font-weight:600}
+  </style>
+</head>
+<body>
+<header>Mini Chat tipo ChatGPT</header>
+<div id="wrap"></div>
+<footer>
+  <div id="bar">
+    <input type="file" id="file" accept="image/*" style="display:none"/>
+    <textarea id="input" placeholder="Scrivi... (es. /img gattino acquerello)"></textarea>
+    <button id="attach">📎</button>
+    <button id="send">Invia</button>
+  </div>
+  <div class="hint" style="max-width:860px;margin:4px auto 10px;padding:0 12px">
+    Comandi: <span class="cmd">/img &lt;prompt&gt;</span> genera immagine ·
+    <span class="cmd">/edit &lt;prompt&gt;</span> modifica l’immagine allegata
+  </div>
+</footer>
+
+<script>
+const wrap = document.getElementById('wrap');
+const ta = document.getElementById('input');
+const attach = document.getElementById('attach');
+const fileInput = document.getElementById('file');
+
+let history = JSON.parse(localStorage.getItem('chat_history')||'[]');
+let attachedImage = null; // {name, dataURL}
+
+function render(){
+  wrap.innerHTML='';
+  history.forEach(m=>{
+    if(m.type==='sys'){ const d=document.createElement('div'); d.className='sys'; d.textContent=m.text; wrap.appendChild(d); return;}
+    const row=document.createElement('div'); row.className='msg '+(m.role==='user'?'mine':'');
+    const b=document.createElement('div'); b.className='bubble'; b.textContent=m.text||'';
+    if(m.image){ const img=document.createElement('img'); img.src=m.image; img.className='imgthumb'; b.appendChild(img);}
+    if(m.images){ m.images.forEach(u=>{const img=document.createElement('img'); img.src=u; img.className='imgthumb'; b.appendChild(img);}); }
+    row.appendChild(b); wrap.appendChild(row);
+  });
+  window.scrollTo(0,document.body.scrollHeight);
+}
+function push(msg){ history.push(msg); localStorage.setItem('chat_history',JSON.stringify(history)); render(); }
+render();
+
+attach.onclick=()=>fileInput.click();
+fileInput.onchange=()=>{
+  const f=fileInput.files[0]; if(!f) return;
+  if (f.size>6*1024*1024){ alert("Max 6MB"); fileInput.value=''; return; }
+  const r=new FileReader();
+  r.onload=()=>{ attachedImage={name:f.name, dataURL:r.result}; push({type:'sys',text:'🖼️ allegata: '+f.name}); };
+  r.readAsDataURL(f);
+};
+
+document.getElementById('send').onclick = async ()=>{
+  const text = ta.value.trim(); if(!text && !attachedImage) return;
+  ta.value='';
+
+  // /img => genera
+  if(text.startsWith('/img')){
+    const prompt=text.replace('/img','').trim(); if(!prompt){ push({type:'sys',text:'Aggiungi un prompt dopo /img'}); return;}
+    push({role:'user',text:'/img '+prompt});
+    push({type:'sys',text:'⏳ Genero immagine...'});
+    try{
+      const r = await fetch('/api/image-generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt})});
+      const data = await r.json();
+      history.pop();
+      if(data.error){ push({type:'sys',text:'Errore: '+data.error}); return; }
+      push({role:'assistant',text:'Ecco:',images:data.images.map(b64=>'data:image/png;base64,'+b64)});
+    }catch(e){ history.pop(); push({type:'sys',text:'Errore generazione.'}); }
+    return;
+  }
+
+  // /edit => modifica
+  if(text.startsWith('/edit')){
+    if(!attachedImage){ push({type:'sys',text:'Allega prima un’immagine.'}); return;}
+    const prompt=text.replace('/edit','').trim()||'modifica immagine';
+    push({role:'user',text:'/edit '+prompt, image:attachedImage.dataURL});
+    push({type:'sys',text:'⏳ Modifico immagine...'});
+    try{
+      const b64 = attachedImage.dataURL.split(',')[1];
+      const r = await fetch('/api/image-edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,image_b64:b64})});
+      const data = await r.json();
+      attachedImage=null; fileInput.value='';
+      history.pop();
+      if(data.error){ push({type:'sys',text:'Errore: '+data.error}); return; }
+      push({role:'assistant',text:'Fatto:',images:data.images.map(b64=>'data:image/png;base64,'+b64)});
+    }catch(e){ history.pop(); push({type:'sys',text:'Errore editing.'}); }
+    return;
+  }
+
+  // chat testuale
+  push({role:'user',text});
+  push({type:'sys',text:'⏳ Sto pensando...'});
+  try{
+    const r = await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({history})});
+    const data = await r.json();
+    history.pop();
+    if(data.error){ push({type:'sys',text:'Errore: '+data.error}); return; }
+    push({role:'assistant',text:data.output});
+  }catch(e){ history.pop(); push({type:'sys',text:'Errore chat.'}); }
+};
+</script>
+</body>
+</html>
