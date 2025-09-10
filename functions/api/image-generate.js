@@ -17,7 +17,10 @@ export async function onRequestPost(ctx) {
       })
     });
 
-    if (!resp.ok) return new Response(await resp.text(), { status: resp.status });
+    if (!resp.ok) {
+      const err = await resp.text();
+      return new Response(JSON.stringify({ error: err }), { status: resp.status });
+    }
     const data = await resp.json();
     const images = (data.data || []).map(d => d.b64_json);
     return new Response(JSON.stringify({ images }), { headers: { "Content-Type": "application/json" } });
