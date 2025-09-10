@@ -23,7 +23,10 @@ export async function onRequestPost(ctx) {
       })
     });
 
-    if (!resp.ok) return new Response(await resp.text(), { status: resp.status });
+    if (!resp.ok) {
+      const err = await resp.text();
+      return new Response(JSON.stringify({ error: err }), { status: resp.status });
+    }
     const data = await resp.json();
     const out = data.choices?.[0]?.message?.content || "Ok.";
     return new Response(JSON.stringify({ output: out }), { headers: { "Content-Type": "application/json" } });
