@@ -3,107 +3,226 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Strumento immagini</title>
+  <title>Alicia Tattoo — Kuromi Edition</title>
   <style>
-    :root{--bg:#f7f8fb;--fg:#111;--muted:#666;--card:#fff}
+    :root{
+      --bg:#f7f5fb;         /* fondo chiaro lilla */
+      --fg:#1b1b1f;         /* testo scuro */
+      --card:#ffffff;       /* card */
+      --muted:#6b6b75;
+      --kuromi:#8b5cf6;     /* viola principale */
+      --kuromi-dark:#5b21b6;
+      --pink:#ff9ecb;       /* rosa carino */
+      --ink:#111;           /* bottoni scuri */
+      --ring:#e6defa;       /* bordi chiari */
+    }
     *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--fg)}
-    header{padding:16px 20px;background:#fff;border-bottom:1px solid #eee;font-weight:700}
-    #wrap{max-width:900px;margin:20px auto;padding:0 16px}
-    .tabs{display:flex;gap:8px;margin-bottom:16px}
-    .tab{padding:10px 14px;border-radius:10px;border:1px solid #ddd;background:#fff;cursor:pointer}
-    .tab.active{background:#111;color:#fff;border-color:#111}
-    .card{background:var(--card);border:1px solid #eee;border-radius:14px;padding:16px}
-    label{display:block;font-size:14px;color:#333;margin:8px 0 6px}
-    textarea,input,select{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px}
-    .row{display:flex;gap:12px;flex-wrap:wrap}
-    .row>*{flex:1 1 220px}
-    button{padding:12px 16px;border:0;border-radius:12px;background:#111;color:#fff;cursor:pointer}
-    .status{margin-top:10px;font-size:14px;color:#555}
-    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:16px}
-    .img{width:100%;border-radius:12px}
-    .help{font-size:12px;color:#666}
-    .pill{display:inline-block;background:#f1f3f7;border:1px solid #e4e7ee;padding:6px 10px;border-radius:999px;font-size:12px;margin-right:6px;margin-bottom:6px;cursor:pointer}
-    .pill.active{background:#111;color:#fff;border-color:#111}
+    body{
+      margin:0;
+      font-family:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--fg);
+      background:
+        radial-gradient(1200px 800px at 110% -10%, #fff0 60%, #f3eaff 100%),
+        radial-gradient(1200px 800px at -10% 110%, #fff0 60%, #ffe3f3 100%),
+        var(--bg);
+    }
+    /* Header */
+    header{
+      position:sticky; top:0; z-index:10;
+      backdrop-filter: blur(8px);
+      background:linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.75));
+      border-bottom:1px solid var(--ring);
+    }
+    .brand{
+      max-width:980px; margin:0 auto; padding:14px 16px;
+      display:flex; align-items:center; gap:12px;
+    }
+    .logo{
+      width:40px; height:40px; border-radius:12px; overflow:hidden; flex:0 0 auto;
+      border:2px solid var(--kuromi);
+      box-shadow:0 0 0 4px rgba(139,92,246,.15);
+      background:#fff center/cover no-repeat;
+    }
+    .brand h1{
+      font-size:18px; margin:0; line-height:1.1;
+    }
+    .subtitle{
+      font-size:12px; color:var(--muted);
+    }
+
+    /* Wrapper + tabs */
+    #wrap{max-width:980px; margin:18px auto 40px; padding:0 16px}
+    .tabs{display:flex; gap:10px; margin:14px 0 16px}
+    .tab{
+      padding:10px 14px; border-radius:999px; cursor:pointer;
+      border:1px solid var(--ring); background:#fff; color:#3b3b43;
+      box-shadow:0 1px 3px rgba(0,0,0,.04);
+    }
+    .tab.active{
+      background:linear-gradient(135deg, var(--kuromi) 0%, var(--pink) 100%);
+      color:#fff; border-color:transparent;
+      box-shadow:0 6px 16px rgba(139,92,246,.25);
+    }
+
+    /* Card */
+    .card{
+      background:var(--card);
+      border:1px solid var(--ring);
+      border-radius:18px;
+      padding:18px;
+      box-shadow:0 8px 30px rgba(91,33,182,.06);
+    }
+    label{display:block; font-size:14px; color:#2f2f36; margin:10px 0 6px}
+    textarea,input,select{
+      width:100%; padding:12px 14px;
+      border:1px solid var(--ring); border-radius:12px; background:#fff;
+      outline:none; transition:.2s border, .2s box-shadow;
+    }
+    textarea:focus, input:focus, select:focus{
+      border-color:var(--kuromi);
+      box-shadow:0 0 0 4px rgba(139,92,246,.15);
+    }
+    .row{display:flex; gap:12px; flex-wrap:wrap}
+    .row>*{flex:1 1 240px}
+
+    .pill{
+      display:inline-block; background:#faf8ff; color:#3b3b43;
+      border:1px solid var(--ring); padding:8px 12px; border-radius:999px;
+      font-size:12px; margin:0 8px 8px 0; cursor:pointer;
+      transition:.15s transform;
+    }
+    .pill:hover{transform:translateY(-1px)}
+    .pill.active{
+      background:linear-gradient(135deg, var(--kuromi) 0%, var(--pink) 100%);
+      color:#fff; border-color:transparent;
+    }
+
+    button{
+      padding:12px 16px; border:0; border-radius:12px; cursor:pointer;
+      color:#fff; background:linear-gradient(135deg, var(--kuromi) 0%, var(--kuromi-dark) 100%);
+      box-shadow:0 8px 16px rgba(139,92,246,.25);
+    }
+    button:disabled{opacity:.6; cursor:not-allowed}
+    .status{margin-top:10px; font-size:14px; color:#5a5667}
+    .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:14px; margin-top:16px}
+    .img{width:100%; border-radius:16px; border:1px solid var(--ring); background:#fff}
+
+    .help{font-size:12px; color:#6a6a75}
+
+    /* Kuromi corner image */
+    .kuromi-corner{
+      position:fixed; right:14px; bottom:14px; width:84px; height:84px; opacity:.95;
+      filter: drop-shadow(0 8px 16px rgba(0,0,0,.25));
+      display:none;
+    }
   </style>
 </head>
 <body>
-<header>Generatore immagini (semplice)</header>
-<div id="wrap">
-
-  <div class="tabs">
-    <div class="tab active" data-tab="gen">Crea immagine</div>
-    <div class="tab" data-tab="edit">Modifica immagine</div>
-  </div>
-
-  <!-- CREA -->
-  <div id="panel-gen" class="card">
-    <label>Stile (facoltativo)</label>
-    <div id="preset-box">
-      <span class="pill active" data-val="">Nessuno</span>
-      <span class="pill" data-val="in stile tatuaggio old school, bianco e nero, linee nette">Old School B/N</span>
-      <span class="pill" data-val="in stile neo-traditional, colori saturi, contorni marcati">Neo-Traditional</span>
-      <span class="pill" data-val="fine-line, linee sottili, minimal">Fine-line</span>
-      <span class="pill" data-val="acquerello, palette pastello, effetto carta">Acquerello</span>
-    </div>
-
-    <label>Descrivi l'immagine</label>
-    <textarea id="gen-prompt" rows="3" placeholder="Es: bulldog francese che piange petali di rosa"></textarea>
-
-    <div class="row">
+  <header>
+    <div class="brand">
+      <div class="logo" id="logo"></div>
       <div>
-        <label>Dimensione</label>
-        <select id="gen-size">
-          <option>1024x1024</option>
-          <option>1024x768</option>
-          <option>768x1024</option>
-          <option>512x512</option>
-        </select>
-      </div>
-      <div>
-        <label>Quante immagini</label>
-        <select id="gen-n">
-          <option>1</option><option>2</option><option>3</option><option>4</option>
-        </select>
+        <h1>Alicia Tattoo — Kuromi Edition</h1>
+        <div class="subtitle">Generatore & Modifica immagini, tutto super semplice ✨</div>
       </div>
     </div>
+  </header>
 
-    <p><button id="btn-genera">Crea immagine</button></p>
-    <div id="gen-status" class="status"></div>
-    <div id="gen-out" class="grid"></div>
-    <p class="help">Suggerimento: frasi semplici tipo “tatuaggio old school di una rosa con foglie, linee nette”.</p>
-  </div>
-
-  <!-- EDIT -->
-  <div id="panel-edit" class="card" style="display:none">
-    <label>Carica immagine (max ~6MB)</label>
-    <input type="file" id="edit-file" accept="image/*"/>
-    <label>Come la vuoi modificare?</label>
-    <textarea id="edit-prompt" rows="3" placeholder="Es: rendila in stile tatuaggio old school in bianco e nero"></textarea>
-    <div class="row">
-      <div>
-        <label>Dimensione risultato</label>
-        <select id="edit-size">
-          <option>1024x1024</option>
-          <option>1024x768</option>
-          <option>768x1024</option>
-          <option>512x512</option>
-        </select>
-      </div>
-      <div style="align-self:end">
-        <button id="btn-edit">Modifica immagine</button>
-      </div>
+  <div id="wrap">
+    <div class="tabs">
+      <div class="tab active" data-tab="gen">Crea immagine</div>
+      <div class="tab" data-tab="edit">Modifica immagine</div>
     </div>
-    <div id="edit-status" class="status"></div>
-    <div id="edit-out" class="grid"></div>
+
+    <!-- CREA -->
+    <div id="panel-gen" class="card">
+      <label>Stile (facoltativo)</label>
+      <div id="preset-box">
+        <span class="pill active" data-val="">Nessuno</span>
+        <span class="pill" data-val="in stile tatuaggio old school, bianco e nero, linee nette">Old School B/N</span>
+        <span class="pill" data-val="in stile neo-traditional, colori saturi, contorni marcati">Neo-Traditional</span>
+        <span class="pill" data-val="fine-line, linee sottili, minimal">Fine-line</span>
+        <span class="pill" data-val="acquerello, palette pastello, effetto carta">Acquerello</span>
+      </div>
+
+      <label>Descrivi l'immagine</label>
+      <textarea id="gen-prompt" rows="3" placeholder="Es: bulldog francese che piange petali di rosa"></textarea>
+
+      <div class="row">
+        <div>
+          <label>Dimensione</label>
+          <select id="gen-size">
+            <option>1024x1024</option>
+            <option>1024x768</option>
+            <option>768x1024</option>
+            <option>512x512</option>
+          </select>
+        </div>
+        <div>
+          <label>Quante immagini</label>
+          <select id="gen-n">
+            <option>1</option><option>2</option><option>3</option><option>4</option>
+          </select>
+        </div>
+      </div>
+
+      <p><button id="btn-genera">Crea immagine ✨</button></p>
+      <div id="gen-status" class="status"></div>
+      <div id="gen-out" class="grid"></div>
+      <p class="help">Tip: frasi semplici tipo “tatuaggio old school di una rosa con foglie, linee nette”.</p>
+    </div>
+
+    <!-- EDIT -->
+    <div id="panel-edit" class="card" style="margin-top:16px; display:none">
+      <label>Carica immagine (max ~6MB)</label>
+      <input type="file" id="edit-file" accept="image/*"/>
+
+      <label>Come la vuoi modificare?</label>
+      <textarea id="edit-prompt" rows="3" placeholder="Es: rendila in stile tatuaggio old school in bianco e nero"></textarea>
+
+      <div class="row" style="margin-top:6px">
+        <div>
+          <label>Dimensione risultato</label>
+          <select id="edit-size">
+            <option>1024x1024</option>
+            <option>1024x768</option>
+            <option>768x1024</option>
+            <option>512x512</option>
+          </select>
+        </div>
+        <div style="align-self:end">
+          <button id="btn-edit">Modifica immagine 🖌️</button>
+        </div>
+      </div>
+
+      <div id="edit-status" class="status"></div>
+      <div id="edit-out" class="grid"></div>
+    </div>
   </div>
 
-</div>
+  <!-- Kuromi corner (si nasconde se l'immagine non c'è) -->
+  <img id="kuromi-corner" class="kuromi-corner" alt="Kuromi"/>
 
 <script>
 const $ = (id)=>document.getElementById(id);
 
-// Tabs
+/* ====== Kuromi logo & corner ====== */
+/* Carica assets/kuromi.png se presente, altrimenti nasconde */
+(function(){
+  const kuromiURL = './assets/kuromi.png';
+  const testImg = new Image();
+  testImg.onload = ()=>{
+    // Header logo e corner
+    $('logo').style.backgroundImage = `url('${kuromiURL}')`;
+    const corner = $('kuromi-corner');
+    corner.src = kuromiURL;
+    corner.style.display = 'block';
+  };
+  testImg.onerror = ()=>{ /* niente logo/angolo se manca l'immagine */ };
+  testImg.src = kuromiURL;
+})();
+
+/* ====== Tabs ====== */
 document.querySelectorAll('.tab').forEach(t=>{
   t.onclick=()=>{
     document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
@@ -111,10 +230,11 @@ document.querySelectorAll('.tab').forEach(t=>{
     const tab=t.dataset.tab;
     document.getElementById('panel-gen').style.display = tab==='gen'?'block':'none';
     document.getElementById('panel-edit').style.display = tab==='edit'?'block':'none';
+    window.scrollTo({top:0, behavior:'smooth'});
   };
 });
 
-// Preset stile
+/* ====== Preset stile ====== */
 let presetVal = "";
 document.querySelectorAll('#preset-box .pill').forEach(p=>{
   p.onclick=()=>{
@@ -124,7 +244,7 @@ document.querySelectorAll('#preset-box .pill').forEach(p=>{
   };
 });
 
-// CREA
+/* ====== Genera ====== */
 $('btn-genera').onclick = async ()=>{
   const promptBase = $('gen-prompt').value.trim();
   if(!promptBase){ $('gen-status').textContent='Scrivi una descrizione.'; return; }
@@ -132,6 +252,7 @@ $('btn-genera').onclick = async ()=>{
   const size = $('gen-size').value;
   const n = $('gen-n').value;
 
+  $('btn-genera').disabled = true;
   $('gen-status').textContent='⏳ Creo...';
   $('gen-out').innerHTML='';
   try{
@@ -145,9 +266,10 @@ $('btn-genera').onclick = async ()=>{
       a.appendChild(img); $('gen-out').appendChild(a);
     });
   }catch(e){ $('gen-status').textContent='Errore di rete.'; }
+  finally{ $('btn-genera').disabled = false; }
 };
 
-// EDIT
+/* ====== Edit ====== */
 $('btn-edit').onclick = async ()=>{
   const f = $('edit-file').files[0];
   const prompt = $('edit-prompt').value.trim();
@@ -156,6 +278,7 @@ $('btn-edit').onclick = async ()=>{
   if(f.size>6*1024*1024){ $('edit-status').textContent='Immagine troppo grande (max ~6MB).'; return; }
   if(!prompt){ $('edit-status').textContent='Scrivi come vuoi modificarla.'; return; }
 
+  $('btn-edit').disabled = true;
   $('edit-status').textContent='⏳ Modifico...';
   $('edit-out').innerHTML='';
   const reader=new FileReader();
@@ -172,6 +295,7 @@ $('btn-edit').onclick = async ()=>{
         a.appendChild(img); $('edit-out').appendChild(a);
       });
     }catch(e){ $('edit-status').textContent='Errore di rete.'; }
+    finally{ $('btn-edit').disabled = false; }
   };
   reader.readAsDataURL(f);
 };
