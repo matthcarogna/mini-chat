@@ -5,7 +5,7 @@ export async function onRequestPost(ctx) {
       return new Response(JSON.stringify({ error: "Prompt o immagine mancante" }), { status: 400 });
     }
 
-    // multipart/form-data per /images/edits
+    // multipart/form-data per /v1/images/edits
     const boundary = "----cfboundary" + Math.random().toString(16).slice(2);
     const enc = (name, value, filename, contentType) => {
       let part = `--${boundary}\r\nContent-Disposition: form-data; name="${name}"`;
@@ -34,7 +34,10 @@ export async function onRequestPost(ctx) {
       body: new Blob(chunks)
     });
 
-    if (!resp.ok) return new Response(await resp.text(), { status: resp.status });
+    if (!resp.ok) {
+      const err = await resp.text();
+      return new Response(JSON.stringify({ error: err }), { status: resp.status });
+    }
     const data = await resp.json();
     const images = (data.data || []).map(d => d.b64_json);
     return new Response(JSON.stringify({ images }), { headers: { "Content-Type": "application/json" } });
