@@ -3,122 +3,177 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Mini Chat & Immagini</title>
+  <title>Strumento immagini</title>
   <style>
-    :root{--bg:#f6f7fb;--fg:#111;--muted:#666;--bubble:#fff;--mine:#e8f0fe}
-    body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--fg)}
-    header{position:sticky;top:0;background:#fff;border-bottom:1px solid #eee;padding:12px 16px;font-weight:600}
-    #wrap{max-width:860px;margin:0 auto;padding:12px 16px 96px}
-    .msg{display:flex;gap:12px;margin:10px 0}
-    .msg.mine{justify-content:flex-end}
-    .bubble{max-width:72%;background:var(--bubble);padding:12px 14px;border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.06);white-space:pre-wrap}
-    .msg.mine .bubble{background:var(--mine)}
-    .sys{font-size:12px;color:var(--muted);text-align:center;margin:14px 0}
-    footer{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #eee}
-    #bar{max-width:860px;margin:0 auto;padding:8px 12px;display:flex;gap:8px;align-items:center}
-    textarea{flex:1;min-height:48px;max-height:160px;border:1px solid #ddd;border-radius:12px;padding:10px 12px;resize:vertical}
-    button{border:0;background:#111;color:#fff;padding:10px 14px;border-radius:12px;cursor:pointer}
-    .hint{font-size:12px;color:var(--muted)}
-    .imgthumb{max-width:220px;border-radius:10px;display:block;margin-top:6px}
-    .cmd{color:#9147ff;font-weight:600}
+    :root{--bg:#f7f8fb;--fg:#111;--muted:#666;--card:#fff}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--fg)}
+    header{padding:16px 20px;background:#fff;border-bottom:1px solid #eee;font-weight:700}
+    #wrap{max-width:900px;margin:20px auto;padding:0 16px}
+    .tabs{display:flex;gap:8px;margin-bottom:16px}
+    .tab{padding:10px 14px;border-radius:10px;border:1px solid #ddd;background:#fff;cursor:pointer}
+    .tab.active{background:#111;color:#fff;border-color:#111}
+    .card{background:var(--card);border:1px solid #eee;border-radius:14px;padding:16px}
+    label{display:block;font-size:14px;color:#333;margin:8px 0 6px}
+    textarea,input,select{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .row>*{flex:1 1 220px}
+    button{padding:12px 16px;border:0;border-radius:12px;background:#111;color:#fff;cursor:pointer}
+    .status{margin-top:10px;font-size:14px;color:#555}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:16px}
+    .img{width:100%;border-radius:12px}
+    .help{font-size:12px;color:#666}
+    .pill{display:inline-block;background:#f1f3f7;border:1px solid #e4e7ee;padding:6px 10px;border-radius:999px;font-size:12px;margin-right:6px;margin-bottom:6px;cursor:pointer}
+    .pill.active{background:#111;color:#fff;border-color:#111}
   </style>
 </head>
 <body>
-<header>Mini Chat tipo ChatGPT</header>
-<div id="wrap"></div>
-<footer>
-  <div id="bar">
-    <input type="file" id="file" accept="image/*" style="display:none"/>
-    <textarea id="input" placeholder="Scrivi... (es. /img gattino acquerello)"></textarea>
-    <button id="attach">📎</button>
-    <button id="send">Invia</button>
+<header>Generatore immagini (semplice)</header>
+<div id="wrap">
+
+  <div class="tabs">
+    <div class="tab active" data-tab="gen">Crea immagine</div>
+    <div class="tab" data-tab="edit">Modifica immagine</div>
   </div>
-  <div class="hint" style="max-width:860px;margin:4px auto 10px;padding:0 12px">
-    Comandi: <span class="cmd">/img &lt;prompt&gt;</span> genera immagine ·
-    <span class="cmd">/edit &lt;prompt&gt;</span> modifica l’immagine allegata
+
+  <!-- CREA -->
+  <div id="panel-gen" class="card">
+    <label>Stile (facoltativo)</label>
+    <div id="preset-box">
+      <span class="pill active" data-val="">Nessuno</span>
+      <span class="pill" data-val="in stile tatuaggio old school, bianco e nero, linee nette">Old School B/N</span>
+      <span class="pill" data-val="in stile neo-traditional, colori saturi, contorni marcati">Neo-Traditional</span>
+      <span class="pill" data-val="fine-line, linee sottili, minimal">Fine-line</span>
+      <span class="pill" data-val="acquerello, palette pastello, effetto carta">Acquerello</span>
+    </div>
+
+    <label>Descrivi l'immagine</label>
+    <textarea id="gen-prompt" rows="3" placeholder="Es: bulldog francese che piange petali di rosa"></textarea>
+
+    <div class="row">
+      <div>
+        <label>Dimensione</label>
+        <select id="gen-size">
+          <option>1024x1024</option>
+          <option>1024x768</option>
+          <option>768x1024</option>
+          <option>512x512</option>
+        </select>
+      </div>
+      <div>
+        <label>Quante immagini</label>
+        <select id="gen-n">
+          <option>1</option><option>2</option><option>3</option><option>4</option>
+        </select>
+      </div>
+    </div>
+
+    <p><button id="btn-genera">Crea immagine</button></p>
+    <div id="gen-status" class="status"></div>
+    <div id="gen-out" class="grid"></div>
+    <p class="help">Suggerimento: frasi semplici tipo “tatuaggio old school di una rosa con foglie, linee nette”.</p>
   </div>
-</footer>
+
+  <!-- EDIT -->
+  <div id="panel-edit" class="card" style="display:none">
+    <label>Carica immagine (max ~6MB)</label>
+    <input type="file" id="edit-file" accept="image/*"/>
+    <label>Come la vuoi modificare?</label>
+    <textarea id="edit-prompt" rows="3" placeholder="Es: rendila in stile tatuaggio old school in bianco e nero"></textarea>
+    <div class="row">
+      <div>
+        <label>Dimensione risultato</label>
+        <select id="edit-size">
+          <option>1024x1024</option>
+          <option>1024x768</option>
+          <option>768x1024</option>
+          <option>512x512</option>
+        </select>
+      </div>
+      <div style="align-self:end">
+        <button id="btn-edit">Modifica immagine</button>
+      </div>
+    </div>
+    <div id="edit-status" class="status"></div>
+    <div id="edit-out" class="grid"></div>
+  </div>
+
+</div>
 
 <script>
-const wrap = document.getElementById('wrap');
-const ta = document.getElementById('input');
-const attach = document.getElementById('attach');
-const fileInput = document.getElementById('file');
+const $ = (id)=>document.getElementById(id);
 
-let history = JSON.parse(localStorage.getItem('chat_history')||'[]');
-let attachedImage = null; // {name, dataURL}
+// Tabs
+document.querySelectorAll('.tab').forEach(t=>{
+  t.onclick=()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    const tab=t.dataset.tab;
+    document.getElementById('panel-gen').style.display = tab==='gen'?'block':'none';
+    document.getElementById('panel-edit').style.display = tab==='edit'?'block':'none';
+  };
+});
 
-function render(){
-  wrap.innerHTML='';
-  history.forEach(m=>{
-    if(m.type==='sys'){ const d=document.createElement('div'); d.className='sys'; d.textContent=m.text; wrap.appendChild(d); return;}
-    const row=document.createElement('div'); row.className='msg '+(m.role==='user'?'mine':'');
-    const b=document.createElement('div'); b.className='bubble'; b.textContent=m.text||'';
-    if(m.image){ const img=document.createElement('img'); img.src=m.image; img.className='imgthumb'; b.appendChild(img);}
-    if(m.images){ m.images.forEach(u=>{const img=document.createElement('img'); img.src=u; img.className='imgthumb'; b.appendChild(img);}); }
-    row.appendChild(b); wrap.appendChild(row);
-  });
-  window.scrollTo(0,document.body.scrollHeight);
-}
-function push(msg){ history.push(msg); localStorage.setItem('chat_history',JSON.stringify(history)); render(); }
-render();
+// Preset stile
+let presetVal = "";
+document.querySelectorAll('#preset-box .pill').forEach(p=>{
+  p.onclick=()=>{
+    document.querySelectorAll('#preset-box .pill').forEach(x=>x.classList.remove('active'));
+    p.classList.add('active');
+    presetVal = p.dataset.val || "";
+  };
+});
 
-attach.onclick=()=>fileInput.click();
-fileInput.onchange=()=>{
-  const f=fileInput.files[0]; if(!f) return;
-  if (f.size>6*1024*1024){ alert("Max 6MB"); fileInput.value=''; return; }
-  const r=new FileReader();
-  r.onload=()=>{ attachedImage={name:f.name, dataURL:r.result}; push({type:'sys',text:'🖼️ allegata: '+f.name}); };
-  r.readAsDataURL(f);
+// CREA
+$('btn-genera').onclick = async ()=>{
+  const promptBase = $('gen-prompt').value.trim();
+  if(!promptBase){ $('gen-status').textContent='Scrivi una descrizione.'; return; }
+  const prompt = presetVal ? `${promptBase}, ${presetVal}` : promptBase;
+  const size = $('gen-size').value;
+  const n = $('gen-n').value;
+
+  $('gen-status').textContent='⏳ Creo...';
+  $('gen-out').innerHTML='';
+  try{
+    const r = await fetch('/api/image-generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,size,n})});
+    const data = await r.json();
+    if(!r.ok || data.error){ $('gen-status').textContent='Errore: '+(data.error||r.status); return; }
+    $('gen-status').textContent='';
+    data.images.forEach(b64=>{
+      const a=document.createElement('a'); a.download='image.png'; a.href='data:image/png;base64,'+b64;
+      const img=document.createElement('img'); img.src=a.href; img.className='img';
+      a.appendChild(img); $('gen-out').appendChild(a);
+    });
+  }catch(e){ $('gen-status').textContent='Errore di rete.'; }
 };
 
-document.getElementById('send').onclick = async ()=>{
-  const text = ta.value.trim(); if(!text && !attachedImage) return;
-  ta.value='';
+// EDIT
+$('btn-edit').onclick = async ()=>{
+  const f = $('edit-file').files[0];
+  const prompt = $('edit-prompt').value.trim();
+  const size = $('edit-size').value;
+  if(!f){ $('edit-status').textContent='Seleziona un’immagine.'; return; }
+  if(f.size>6*1024*1024){ $('edit-status').textContent='Immagine troppo grande (max ~6MB).'; return; }
+  if(!prompt){ $('edit-status').textContent='Scrivi come vuoi modificarla.'; return; }
 
-  // /img => genera
-  if(text.startsWith('/img')){
-    const prompt=text.replace('/img','').trim(); if(!prompt){ push({type:'sys',text:'Aggiungi un prompt dopo /img'}); return;}
-    push({role:'user',text:'/img '+prompt});
-    push({type:'sys',text:'⏳ Genero immagine...'});
+  $('edit-status').textContent='⏳ Modifico...';
+  $('edit-out').innerHTML='';
+  const reader=new FileReader();
+  reader.onload=async ()=>{
     try{
-      const r = await fetch('/api/image-generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt})});
+      const b64=reader.result.split(',')[1];
+      const r = await fetch('/api/image-edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,image_b64:b64,size})});
       const data = await r.json();
-      history.pop();
-      if(data.error){ push({type:'sys',text:'Errore: '+data.error}); return; }
-      push({role:'assistant',text:'Ecco:',images:data.images.map(b64=>'data:image/png;base64,'+b64)});
-    }catch(e){ history.pop(); push({type:'sys',text:'Errore generazione.'}); }
-    return;
-  }
-
-  // /edit => modifica
-  if(text.startsWith('/edit')){
-    if(!attachedImage){ push({type:'sys',text:'Allega prima un’immagine.'}); return;}
-    const prompt=text.replace('/edit','').trim()||'modifica immagine';
-    push({role:'user',text:'/edit '+prompt, image:attachedImage.dataURL});
-    push({type:'sys',text:'⏳ Modifico immagine...'});
-    try{
-      const b64 = attachedImage.dataURL.split(',')[1];
-      const r = await fetch('/api/image-edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,image_b64:b64})});
-      const data = await r.json();
-      attachedImage=null; fileInput.value='';
-      history.pop();
-      if(data.error){ push({type:'sys',text:'Errore: '+data.error}); return; }
-      push({role:'assistant',text:'Fatto:',images:data.images.map(b64=>'data:image/png;base64,'+b64)});
-    }catch(e){ history.pop(); push({type:'sys',text:'Errore editing.'}); }
-    return;
-  }
-
-  // chat testuale
-  push({role:'user',text});
-  push({type:'sys',text:'⏳ Sto pensando...'});
-  try{
-    const r = await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({history})});
-    const data = await r.json();
-    history.pop();
-    if(data.error){ push({type:'sys',text:'Errore: '+data.error}); return; }
-    push({role:'assistant',text:data.output});
-  }catch(e){ history.pop(); push({type:'sys',text:'Errore chat.'}); }
+      if(!r.ok || data.error){ $('edit-status').textContent='Errore: '+(data.error||r.status); return; }
+      $('edit-status').textContent='';
+      data.images.forEach(b64=>{
+        const a=document.createElement('a'); a.download='image.png'; a.href='data:image/png;base64,'+b64;
+        const img=document.createElement('img'); img.src=a.href; img.className='img';
+        a.appendChild(img); $('edit-out').appendChild(a);
+      });
+    }catch(e){ $('edit-status').textContent='Errore di rete.'; }
+  };
+  reader.readAsDataURL(f);
 };
 </script>
 </body>
